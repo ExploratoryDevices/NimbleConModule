@@ -1,9 +1,9 @@
 # NimbleConModule
 Nimble Connectivity Module (Basic functions and library)
 
-How to use:
+## How to use:
 Pendant and Actuator parameters are stored as structs with the following format:
-
+```
 struct Actuator
 {
   bool present;
@@ -21,7 +21,8 @@ struct Actuator
   bool airOut;  // Set high to open air-out valve
   bool airIn;   // Set high to open air-in valve
 };
-
+```
+```
 struct Pendant
 {
   bool present;
@@ -38,7 +39,7 @@ struct Pendant
   bool tempLimiting;
   bool sensorFault;
 };
-
+```
 Update the values in the structs with the desired values (either generated in the connectivity module or from some external source).
 
 Data is sent to the actautor on a free-running basis. To disable, set forceCommand to 0.
