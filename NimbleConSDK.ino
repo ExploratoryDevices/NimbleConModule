@@ -2,6 +2,8 @@
 
 #include "nimbleCon.h"
 
+bool btLED = 0;
+
 void setup() {
   // put your setup code here, to run once:
   initNimbleSDK();
@@ -15,20 +17,36 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  // Check actuator and pendant serial ports for complete packets and update structs.
+  readFromPend();
+  if(readFromPend())  // Read values from pendant. If the function returns true, the values were updated so update the pass-through values.
+  {
+    actuator.positionCommand = pendant.positionCommand;
+    actuator.forceCommand = pendant.forceCommand;
+    actuator.airIn = pendant.airIn;
+    actuator.airOut = pendant.airOut;
+    actuator.activated = pendant.activated;
+  }
   
-  if(pendSerial.available()) ledcWrite(9, 50);
-  if(actSerial.available()) ledcWrite(8, 50);
-  if(digitalRead(ENC_BUTT))
+  readFromAct(); // Read values from actuator. If the function returns true, the values were updated. Otherwise there was nothing new.
+
+// ***************** Do stuff to the values to be sent below this line. Use no delays.
+
+  if(digitalRead(ENC_BUTT)) // Encoder button reads low when pressed.
   {
     driveLEDs(encoder.getCount());
-    if(pendSerial.available()) actSerial.write(pendSerial.read());
   }else
   {
     driveLEDs(0);
+    actuator.forceCommand = 0;
   }
 
-  // print ADC values to USB
-  //Serial.print(analogRead(ADC_REF));
-  //Serial.print(", ");
-  //Serial.println(analogRead(SENSOR_ADC));
+// ***************** Do stuff to the values to be sent above this line. Use no delays.
+
+  // Check if it's time to send a packet.
+  if(checkTimer()) sendToAct();
+  
+  pendant.present ? ledcWrite(PEND_LED, 50) : ledcWrite(PEND_LED, 0);  // Display pendant connection status on LED.
+  actuator.present ? ledcWrite(ACT_LED, 50) : ledcWrite(ACT_LED, 0);  // Display actuator connection status on LED.
 }
