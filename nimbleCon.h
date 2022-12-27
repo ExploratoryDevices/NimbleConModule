@@ -139,20 +139,6 @@ void initNimbleSDK()
   timerAlarmWrite(timer, SEND_INTERVAL, true);  // Configure timer threshold
   timerAlarmEnable(timer); // Enable timer
 
-  /*// LED Pin Modes
-  pinMode(ENC_LED_1, OUTPUT);
-  pinMode(ENC_LED_2, OUTPUT);
-  pinMode(ENC_LED_3, OUTPUT);
-  pinMode(ENC_LED_4, OUTPUT);
-  pinMode(ENC_LED_5, OUTPUT);
-  pinMode(ENC_LED_6, OUTPUT);
-  pinMode(ENC_LED_7, OUTPUT);
-  pinMode(ENC_LED_8, OUTPUT);
-  pinMode(ACT_LED, OUTPUT);
-  pinMode(PEND_LED, OUTPUT);
-  pinMode(BT_LED, OUTPUT);
-  pinMode(WIFI_LED, OUTPUT);*/
-
   digitalWrite(ENC_LED_1, LOW);
 
   // Attach PWM to LED pins (pin, PWM channel)
