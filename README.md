@@ -2,6 +2,8 @@
 Nimble Connectivity Module (Basic functions and library)
 
 ## How to use:
+The connectivity module can be uploaded to using the Ardiuno IDE set to "ESP32 Dev Module"
+
 Pendant and Actuator parameters are stored as structs with the following format:
 ```
 struct Actuator
