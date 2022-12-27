@@ -277,10 +277,6 @@ bool readFromPend()
           pendant.positionCommand *= -1;        // Set as negative
         }
         pendant.forceCommand = (incomingPacket[4] << 8) | incomingPacket[3];
-  
-        //Serial.println("Checksum: ");
-        //Serial.println(checkSum, HEX);
-        //Serial.println(statusByte, HEX);
     
         pendant.activated = (statusByte & 0x01) ? 1 : 0;
         pendant.airOut = (statusByte & 0x02) ? 1 : 0;
