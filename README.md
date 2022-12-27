@@ -1,5 +1,6 @@
 # NimbleConModule
-Nimble Connectivity Module (Basic functions and library)
+Nimble Connectivity Module (Basic functions and library).
+This code is designed to run on the Nimble Connectivity Module.
 
 ## How to use:
 The connectivity module can be uploaded to using the Ardiuno IDE set to "ESP32 Dev Module"
