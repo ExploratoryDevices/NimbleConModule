@@ -2,8 +2,15 @@
 Nimble Connectivity Module (Basic functions and library).
 This code is designed to run on the Nimble Connectivity Module.
 
+## IDE Setup
+
+The connectivity module can be uploaded to using the Ardiuno IDE set to `ESP32 Dev Module`.
+
+If the "ESP32 Dev Module" is not available in your IDE, check out [this tutorial](https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/) for information on adding the needed plug-ins to your Arduino IDE.
+
+The NimbleConModule project also requires the `ESP32Encoder` library. This can be downloaded using the Library Manager in the Arduino IDE. This can be accessed by going through the menu at Sketch > Include Libraries > Manage Libraries, or by hitting _Control+Shift+i_.
+
 ## How to use:
-The connectivity module can be uploaded to using the Ardiuno IDE set to "ESP32 Dev Module"
 
 Pendant and Actuator parameters are stored as structs with the following format:
 ```
