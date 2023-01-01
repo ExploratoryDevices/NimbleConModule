@@ -22,13 +22,13 @@ struct Actuator
 
   // Signals from the actuator
   long positionFeedback;  // (range: -1000 to 1000) Errata: actuator delivered before January 2023 this signal always reads positive.
-  long forceFeedback; // (range: -1000 to 1000)
+  long forceFeedback; // (range: -1023 to 1023)
   bool tempLimiting;  // Reads high if the actuator is thermally limiting its performance.
   bool sensorFault;   // Reads high if there's a fault in the position sensor.
 
   // Signals to the actuator
   long positionCommand; // (range: -1000 to 1000)
-  long forceCommand;  // (range: 0 to 1000)
+  long forceCommand;  // (range: 0 to 1023)
   bool activated; // Not used
   bool airOut;  // Set high to open air-out valve
   bool airIn;   // Set high to open air-in valve
