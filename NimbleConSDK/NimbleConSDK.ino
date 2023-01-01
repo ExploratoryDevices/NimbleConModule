@@ -21,7 +21,6 @@ void loop() {
 // ***************** Do stuff to the values to be sent below this line. Use no delays.
   
   // Check actuator and pendant serial ports for complete packets and update structs.
-  readFromPend();
   if(readFromPend())  // Read values from pendant. If the function returns true, the values were updated so update the pass-through values.
   { // DEMO: Pass through data from pendant to actuator
     actuator.positionCommand = pendant.positionCommand;
