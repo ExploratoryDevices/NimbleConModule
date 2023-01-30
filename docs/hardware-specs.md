@@ -12,3 +12,9 @@ Hardware specs:
 - 1x 24PPR clickable encoder with LED ring for display (Dial)
 - 1x micro-USB 2.0 port 12 Mbps
     - Displays as "[Silicon Laboratories CP2102 USB to UART Bridge Controller](https://www.silabs.com/interface/usb-bridges/classic/device.cp2102?tab=techdocs)"
+- 8x Adressable Encoder dial LEDs (green)
+- 4x other LEDs:
+    - Actuator connectivity LED (green)
+    - Pendant Connectivity LED (green)
+    - Bluetooth Status LED (blue)
+    - Wifi Status LED (white)
