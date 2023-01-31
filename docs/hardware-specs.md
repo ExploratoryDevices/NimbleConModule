@@ -106,7 +106,7 @@
   </tr>
 </table>
 
-## Actuator Transmit Protocol
+### Actuator Transmit Protocol
 
 <table>
   <tr>
