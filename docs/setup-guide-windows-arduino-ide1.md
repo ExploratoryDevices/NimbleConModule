@@ -1,4 +1,4 @@
-# Setup Guide for Arduino IDE v1 on Windows PC
+# NimbleConModule Setup Guide for Arduino IDE v1 on Windows PC
 
 **Note:** These instructions were last tested on Jan 29, 2023.
 
