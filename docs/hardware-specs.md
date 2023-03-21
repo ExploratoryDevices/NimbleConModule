@@ -177,3 +177,6 @@
     <td colspan="8">CHECKSUM_H</td>
   </tr>
 </table>
+
+System Type for NimbleStroker is 0b100. All others reserved.
+Node Type for NimbleStroker is 0b000 for NimbleStroker control pendant and 0b001 for NimbleStroker Actuator. All others reserved.
