@@ -1,4 +1,4 @@
-# Nimble Controller Module - Hardware Specifications
+# Nimble Connectivity Module - Hardware Specifications
 
 ![Controller module board image](./nimble-controller-module-board.jpg)
 
