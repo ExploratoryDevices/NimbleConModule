@@ -8,7 +8,7 @@ The connectivity module can be uploaded to using the Ardiuno IDE set to `ESP32 D
 
 If the "ESP32 Dev Module" is not available in your IDE, check out [this tutorial](https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/) for information on adding the needed plug-ins to your Arduino IDE.
 
-If, after connecting your device, no new ports are avialable in the Arduino IDE, you may need to install drivers for the USB-to-Serial capabilities of the ESP32 used in the Connectivity Module. The CP201x drivers are available [on the silicon labs website](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads).
+If, after connecting your device, no new ports are avialable in the Arduino IDE, you may need to install drivers for the USB-to-Serial capabilities of the ESP32 used in the Connectivity Module. The CP201x drivers are available [on the silicon labs website](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads). Later devices may use the CH340 USB interface. Instructions on how to install these can be found [here](https://learn.sparkfun.com/tutorials/how-to-install-ch340-drivers/all).
 
 The NimbleConModule project also requires the `ESP32Encoder` library. This can be downloaded using the Library Manager in the Arduino IDE. This can be accessed by going through the menu at Sketch > Include Libraries > Manage Libraries, or by hitting _Control+Shift+i_.
 
