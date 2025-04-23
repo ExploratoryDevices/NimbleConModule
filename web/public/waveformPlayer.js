@@ -9,10 +9,17 @@ const audioPlayer = document.getElementById("audioPlayer");
 const modeToggleButton = document.getElementById("modeToggleButton");
 const actionToggleButton = document.getElementById("actionToggleButton");
 
+const COLORS = {
+    "red": ["red", "rgba(255, 0, 0, 0.3)"]
+}
+
 let audioBuffer = null;
-let stateData = []; // Array to hold external data (dots) as {x, y} objects
+let stateData = {
+    "red": []
+}; // Map of arrays to hold external data (dots) as {x, y} objects
 let drawMode = false; // Flag for draw mode vs playback mode
 let addMode = true; // Flag for add mode vs delete mode
+let currentColor = "red";
 
 // Resize all canvases to full width of the browser
 function resizeCanvases() {
@@ -27,7 +34,7 @@ function resizeCanvases() {
     if (audioBuffer) {
         drawWaveformOnce(audioBuffer);
     }
-    drawInteraction();
+    drawInteraction(currentColor);
     drawPlaybackLine();
 }
 
@@ -72,17 +79,17 @@ function drawWaveformOnce(buffer) {
 }
 
 // Draw interaction elements (dots, lines, and shading)
-function drawInteraction() {
+function drawInteraction(color) {
     const width = interactionCanvas.width;
     const height = interactionCanvas.height;
 
     interactionCtx.clearRect(0, 0, width, height);
 
-    if (stateData.length === 0) return;
+    if (stateData[color].length === 0) return;
 
-    const impliedStart = { x: 0, y: stateData[0].y };
-    const impliedEnd = { x: audioPlayer.duration, y: stateData[stateData.length - 1].y };
-    const allPoints = [impliedStart, ...stateData, impliedEnd].sort((a, b) => a.x - b.x);
+    const impliedStart = { x: 0, y: stateData[color][0].y };
+    const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
+    const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
 
     // Draw translucent shading
     interactionCtx.beginPath();
@@ -95,7 +102,7 @@ function drawInteraction() {
     interactionCtx.lineTo(width, height);
     interactionCtx.lineTo(0, height);
     interactionCtx.closePath();
-    interactionCtx.fillStyle = "rgba(255, 0, 0, 0.3)";
+    interactionCtx.fillStyle = COLORS[color][1];
     interactionCtx.fill();
 
     // Draw dots and lines
@@ -106,7 +113,7 @@ function drawInteraction() {
         // Draw dot
         interactionCtx.beginPath();
         interactionCtx.arc(x, y, 4, 0, 2 * Math.PI);
-        interactionCtx.fillStyle = "red";
+        interactionCtx.fillStyle = COLORS[color][0];
         interactionCtx.fill();
 
         // Draw line
@@ -117,7 +124,7 @@ function drawInteraction() {
             interactionCtx.beginPath();
             interactionCtx.moveTo(x, y);
             interactionCtx.lineTo(nextX, nextY);
-            interactionCtx.strokeStyle = "red";
+            interactionCtx.strokeStyle = COLORS[color][0];
             interactionCtx.stroke();
         }
     });
@@ -141,14 +148,14 @@ function drawPlaybackLine() {
 }
 
 // Calculate the current red Y value
-function getCurrentRedValue(time) {
-    if (stateData.length === 0) {
+function getCurrentValue(time, color) {
+    if (stateData[color].length === 0) {
         return 0; // No dots, return 0
     }
 
-    const impliedStart = { x: 0, y: stateData[0].y };
-    const impliedEnd = { x: audioPlayer.duration, y: stateData[stateData.length - 1].y };
-    const allPoints = [impliedStart, ...stateData, impliedEnd].sort((a, b) => a.x - b.x);
+    const impliedStart = { x: 0, y: stateData[color][0].y };
+    const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
+    const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
 
     for (let i = 0; i < allPoints.length - 1; i++) {
         const point1 = allPoints[i];
@@ -165,7 +172,7 @@ function getCurrentRedValue(time) {
 // Update the "Red value" display
 audioPlayer.addEventListener("timeupdate", () => {
     const currentTime = audioPlayer.currentTime;
-    const currentRedValue = getCurrentRedValue(currentTime);
+    const currentRedValue = getCurrentValue(currentTime, 'red');
 
     // Update the text box
     const redValueDisplay = document.getElementById("redValueDisplay");
@@ -177,9 +184,9 @@ audioPlayer.addEventListener("timeupdate", () => {
 
 // Add a new point to stateData
 function addPoint(x, y) {
-    stateData.push({ x, y });
-    stateData.sort((a, b) => a.x - b.x);
-    drawInteraction();
+    stateData[currentColor].push({ x, y });
+    stateData[currentColor].sort((a, b) => a.x - b.x);
+    drawInteraction(currentColor);
 }
 
 // Remove a point closest to the clicked coordinates
@@ -187,7 +194,7 @@ function removePoint(clickX, clickY) {
     const width = interactionCanvas.width;
     const height = interactionCanvas.height;
 
-    const closestIndex = stateData.findIndex(point => {
+    const closestIndex = stateData[currentColor].findIndex(point => {
         const x = (point.x / audioPlayer.duration) * width;
         const y = height - (point.y / 1023) * height;
         const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
@@ -195,8 +202,8 @@ function removePoint(clickX, clickY) {
     });
 
     if (closestIndex !== -1) {
-        stateData.splice(closestIndex, 1);
-        drawInteraction();
+        stateData[currentColor].splice(closestIndex, 1);
+        drawInteraction(currentColor);
     }
 }
 
