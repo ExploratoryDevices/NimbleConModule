@@ -1,0 +1,16 @@
+{
+  "name": "nimble-controller",
+  "version": "1.0.0",
+  "description": "uwu wats this",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "waveform-data": "^4.5.1",
+    "web-audio-api": "^0.2.2"
+  }
+}
