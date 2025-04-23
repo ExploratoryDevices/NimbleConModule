@@ -10,6 +10,7 @@ const modeToggleButton = document.getElementById("modeToggleButton");
 const actionToggleButton = document.getElementById("actionToggleButton");
 const colorRedButton = document.getElementById("colorRedButton");
 const colorGreenButton = document.getElementById("colorGreenButton");
+const PAYLOAD_ADDR = "http://0.0.0.0:7070";
 
 const COLORS = {
     "red": ["red", "rgba(255, 0, 0, 0.3)"],
@@ -262,3 +263,30 @@ colorRedButton.addEventListener("click", () => {
 colorGreenButton.addEventListener("click", () => {
     currentColor = "green";
 });
+
+function sendValues() {
+    const currentTime = audioPlayer.currentTime; // Current playback time
+    const currentRedValue = getCurrentValue(currentTime, 'red');
+    const currentGreenValue = getCurrentValue(currentTime, 'green');
+
+    // Prepare the payload
+    const payload = {
+        redValue: currentRedValue,
+        greenValue: currentGreenValue,
+        timestamp: currentTime
+    };
+
+    // Send the POST request to the external service
+    fetch(PAYLOAD_ADDR, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+        .catch(error => {
+            console.error("Error during POST request:", error);
+        });
+}
+
+setInterval(sendValues, 1000);
