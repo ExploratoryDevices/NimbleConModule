@@ -141,6 +141,31 @@ function removePoint(clickX, clickY) {
     }
 }
 
+function getCurrentRedValue(time) {
+    if (stateData.length === 0) {
+        return 0; // No dots, return 0
+    }
+
+    // Combine implied start/end points with state data
+    const impliedStart = { x: 0, y: stateData[0].y };
+    const impliedEnd = { x: audioPlayer.duration, y: stateData[stateData.length - 1].y };
+    const allPoints = [impliedStart, ...stateData, impliedEnd].sort((a, b) => a.x - b.x);
+
+    // Find the two points between which the current time lies
+    for (let i = 0; i < allPoints.length - 1; i++) {
+        const point1 = allPoints[i];
+        const point2 = allPoints[i + 1];
+        if (time >= point1.x && time <= point2.x) {
+            // Interpolate the Y value based on the current time
+            const t = (time - point1.x) / (point2.x - point1.x);
+            return Math.round(point1.y + t * (point2.y - point1.y)); // Linear interpolation
+        }
+    }
+
+    return 0; // Fallback case
+}
+
+
 // Toggle between playback and draw mode
 modeToggleButton.addEventListener("click", () => {
     drawMode = !drawMode;
@@ -152,6 +177,17 @@ actionToggleButton.addEventListener("click", () => {
     addMode = !addMode;
     actionToggleButton.innerText = addMode ? "Switch to Delete Points" : "Switch to Add Points";
 });
+
+// Update the red value display on time update
+audioPlayer.addEventListener("timeupdate", () => {
+    const currentTime = audioPlayer.currentTime;
+    const currentRedValue = getCurrentRedValue(currentTime);
+
+    // Update the text box
+    const redValueDisplay = document.getElementById("redValueDisplay");
+    redValueDisplay.innerText = `Red value: ${currentRedValue}`;
+});
+
 
 // Canvas click handler
 canvas.addEventListener("click", (event) => {
