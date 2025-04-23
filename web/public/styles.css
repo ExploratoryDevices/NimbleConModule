@@ -1,0 +1,24 @@
+#canvasContainer {
+    position: relative;
+    width: 100%; /* Full width */
+    height: 400px; /* Fixed height for the waveform container */
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* Stretch canvases horizontally */
+    height: 400px; /* Match the fixed container height */
+}
+
+#playbackCanvas {
+    pointer-events: none;
+}
+#waveformCanvas {
+    pointer-events: none;
+}
+#interactionCanvas {
+    pointer-events: auto; /* Ensure clicks work here */
+}

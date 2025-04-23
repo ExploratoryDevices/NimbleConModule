@@ -11,18 +11,17 @@
             font-family: Arial, sans-serif;
             text-align: center;
         }
-        canvas {
-            border: 1px solid black;
-            display: block;
-            margin: 20px auto;
-            width: 100%;
+        #canvasContainer {
+            position: relative;
+            width: 100%; /* Full width */
+            height: 100vh; /* Full height */
+            overflow: hidden;
         }
-        #timeMarkers {
-            font-size: 12px;
-            margin: 10px auto 20px;
-            display: flex;
-            justify-content: space-between;
-            max-width: 95%;
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Default z-index */
         }
         audio {
             display: block;
@@ -35,12 +34,26 @@
             margin: 10px;
             padding: 10px;
         }
+        #redValueDisplay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: red;
+            background-color: white;
+            padding: 5px;
+            border: 1px solid red;
+            z-index: 10; /* Ensure it appears above the canvases */
+        }
     </style>
 </head>
 <body>
 <h1>Waveform Player</h1>
-<canvas id="waveformCanvas" height="200"></canvas>
-<div id="timeMarkers"></div>
+<div id="canvasContainer">
+    <canvas id="waveformCanvas"></canvas>
+    <canvas id="interactionCanvas" style="z-index: 2;"></canvas>
+    <canvas id="playbackCanvas" style="z-index: 3;"></canvas>
+</div>
+
 <audio id="audioPlayer" controls>
     <source src="/audio-file" type="audio/mpeg">
     Your browser does not support the audio element.
@@ -53,9 +66,9 @@
     <button id="actionToggleButton">Switch to Delete Points</button>
 </div>
 
+<div id="redValueDisplay">Red value: 0</div>
+
 <script src="waveformPlayer.js"></script>
-<div id="redValueDisplay" style="position: absolute; top: 10px; left: 10px; color: red; background-color: white; padding: 5px; border: 1px solid red;">
-    Red value: 0
-</div>
+<link rel="stylesheet" href="styles.css">
 </body>
 </html>
