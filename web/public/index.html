@@ -28,9 +28,12 @@
             display: block;
             margin: 20px auto;
         }
-        input[type="range"] {
-            width: 50%;
-            margin: 20px auto;
+        .controls {
+            margin: 20px;
+        }
+        .controls button {
+            margin: 10px;
+            padding: 10px;
         }
     </style>
 </head>
@@ -42,5 +45,14 @@
     <source src="/audio-file" type="audio/mpeg">
     Your browser does not support the audio element.
 </audio>
-<!-- Add volume slider -->
-<input type="range" id="volumeControl" min="0" max="1
+
+<div class="controls">
+    <!-- Mode toggle button -->
+    <button id="modeToggleButton">Switch to Draw Mode</button>
+    <!-- Add/Delete points toggle button -->
+    <button id="actionToggleButton">Switch to Delete Points</button>
+</div>
+
+<script src="waveformPlayer.js"></script>
+</body>
+</html>
