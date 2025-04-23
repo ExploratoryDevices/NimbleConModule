@@ -8,14 +8,19 @@ const playbackCtx = playbackCanvas.getContext("2d");
 const audioPlayer = document.getElementById("audioPlayer");
 const modeToggleButton = document.getElementById("modeToggleButton");
 const actionToggleButton = document.getElementById("actionToggleButton");
+const colorRedButton = document.getElementById("colorRedButton");
+const colorGreenButton = document.getElementById("colorGreenButton");
 
 const COLORS = {
-    "red": ["red", "rgba(255, 0, 0, 0.3)"]
-}
+    "red": ["red", "rgba(255, 0, 0, 0.3)"],
+    "green": ["green", "rgba(0, 255, 0, 0.3)"]
+};
+
 
 let audioBuffer = null;
 let stateData = {
-    "red": []
+    "red": [],
+    "green": [],
 }; // Map of arrays to hold external data (dots) as {x, y} objects
 let drawMode = false; // Flag for draw mode vs playback mode
 let addMode = true; // Flag for add mode vs delete mode
@@ -34,7 +39,7 @@ function resizeCanvases() {
     if (audioBuffer) {
         drawWaveformOnce(audioBuffer);
     }
-    drawInteraction(currentColor);
+    drawInteraction();
     drawPlaybackLine();
 }
 
@@ -79,56 +84,59 @@ function drawWaveformOnce(buffer) {
 }
 
 // Draw interaction elements (dots, lines, and shading)
-function drawInteraction(color) {
+function drawInteraction() {
     const width = interactionCanvas.width;
     const height = interactionCanvas.height;
 
     interactionCtx.clearRect(0, 0, width, height);
 
-    if (stateData[color].length === 0) return;
+    Object.keys(stateData).forEach(color => {
+        if (stateData[color].length === 0) return;
 
-    const impliedStart = { x: 0, y: stateData[color][0].y };
-    const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
-    const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
+        const impliedStart = { x: 0, y: stateData[color][0].y };
+        const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
+        const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
 
-    // Draw translucent shading
-    interactionCtx.beginPath();
-    interactionCtx.moveTo(0, height - (impliedStart.y / 1023) * height);
-    allPoints.forEach(point => {
-        const x = (point.x / audioPlayer.duration) * width;
-        const y = height - (point.y / 1023) * height;
-        interactionCtx.lineTo(x, y);
-    });
-    interactionCtx.lineTo(width, height);
-    interactionCtx.lineTo(0, height);
-    interactionCtx.closePath();
-    interactionCtx.fillStyle = COLORS[color][1];
-    interactionCtx.fill();
-
-    // Draw dots and lines
-    allPoints.forEach((point, index) => {
-        const x = (point.x / audioPlayer.duration) * width;
-        const y = height - (point.y / 1023) * height;
-
-        // Draw dot
+        // Draw translucent shading
         interactionCtx.beginPath();
-        interactionCtx.arc(x, y, 4, 0, 2 * Math.PI);
-        interactionCtx.fillStyle = COLORS[color][0];
+        interactionCtx.moveTo(0, height - (impliedStart.y / 1023) * height);
+        allPoints.forEach(point => {
+            const x = (point.x / audioPlayer.duration) * width;
+            const y = height - (point.y / 1023) * height;
+            interactionCtx.lineTo(x, y);
+        });
+        interactionCtx.lineTo(width, height);
+        interactionCtx.lineTo(0, height);
+        interactionCtx.closePath();
+        interactionCtx.fillStyle = COLORS[color][1];
         interactionCtx.fill();
 
-        // Draw line
-        if (index < allPoints.length - 1) {
-            const nextPoint = allPoints[index + 1];
-            const nextX = (nextPoint.x / audioPlayer.duration) * width;
-            const nextY = height - (nextPoint.y / 1023) * height;
+        // Draw dots and lines
+        allPoints.forEach((point, index) => {
+            const x = (point.x / audioPlayer.duration) * width;
+            const y = height - (point.y / 1023) * height;
+
+            // Draw dot
             interactionCtx.beginPath();
-            interactionCtx.moveTo(x, y);
-            interactionCtx.lineTo(nextX, nextY);
-            interactionCtx.strokeStyle = COLORS[color][0];
-            interactionCtx.stroke();
-        }
+            interactionCtx.arc(x, y, 4, 0, 2 * Math.PI);
+            interactionCtx.fillStyle = COLORS[color][0];
+            interactionCtx.fill();
+
+            // Draw line
+            if (index < allPoints.length - 1) {
+                const nextPoint = allPoints[index + 1];
+                const nextX = (nextPoint.x / audioPlayer.duration) * width;
+                const nextY = height - (nextPoint.y / 1023) * height;
+                interactionCtx.beginPath();
+                interactionCtx.moveTo(x, y);
+                interactionCtx.lineTo(nextX, nextY);
+                interactionCtx.strokeStyle = COLORS[color][0];
+                interactionCtx.stroke();
+            }
+        });
     });
 }
+
 
 // Draw playback line (dynamic layer)
 function drawPlaybackLine() {
@@ -173,10 +181,13 @@ function getCurrentValue(time, color) {
 audioPlayer.addEventListener("timeupdate", () => {
     const currentTime = audioPlayer.currentTime;
     const currentRedValue = getCurrentValue(currentTime, 'red');
+    const currentGreenValue = getCurrentValue(currentTime, 'green');
 
-    // Update the text box
+    // Update the text boxes
     const redValueDisplay = document.getElementById("redValueDisplay");
+    const greenValueDisplay = document.getElementById("greenValueDisplay");
     redValueDisplay.innerText = `Red value: ${currentRedValue}`;
+    greenValueDisplay.innerText = `Green value: ${currentGreenValue}`;
 
     // Update the playback line
     drawPlaybackLine();
@@ -186,7 +197,7 @@ audioPlayer.addEventListener("timeupdate", () => {
 function addPoint(x, y) {
     stateData[currentColor].push({ x, y });
     stateData[currentColor].sort((a, b) => a.x - b.x);
-    drawInteraction(currentColor);
+    drawInteraction();
 }
 
 // Remove a point closest to the clicked coordinates
@@ -203,7 +214,7 @@ function removePoint(clickX, clickY) {
 
     if (closestIndex !== -1) {
         stateData[currentColor].splice(closestIndex, 1);
-        drawInteraction(currentColor);
+        drawInteraction();
     }
 }
 
@@ -241,4 +252,13 @@ interactionCanvas.addEventListener("click", (event) => {
         const clickPosition = (clickX / interactionCanvas.width) * audioPlayer.duration;
         audioPlayer.currentTime = clickPosition; // Seek audio playback
     }
+});
+
+
+colorRedButton.addEventListener("click", () => {
+    currentColor = "red";
+});
+
+colorGreenButton.addEventListener("click", () => {
+    currentColor = "green";
 });

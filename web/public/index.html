@@ -44,6 +44,16 @@
             border: 1px solid red;
             z-index: 10; /* Ensure it appears above the canvases */
         }
+        #greenValueDisplay {
+            position: absolute;
+            top: 10px;
+            left: 140px;
+            color: green;
+            background-color: white;
+            padding: 5px;
+            border: 1px solid green;
+            z-index: 10; /* Ensure it appears above the canvases */
+        }
     </style>
 </head>
 <body>
@@ -59,14 +69,17 @@
     Your browser does not support the audio element.
 </audio>
 
+<div id="redValueDisplay">Red value: 0</div>
+<div id="greenValueDisplay">Green value: 0</div>
+
+<!-- Buttons for color selection -->
 <div class="controls">
-    <!-- Mode toggle button -->
     <button id="modeToggleButton">Switch to Draw Mode</button>
-    <!-- Add/Delete points toggle button -->
     <button id="actionToggleButton">Switch to Delete Points</button>
+    <button id="colorRedButton" style="background-color: red; color: white;">Select Red</button>
+    <button id="colorGreenButton" style="background-color: green; color: white;">Select Green</button>
 </div>
 
-<div id="redValueDisplay">Red value: 0</div>
 
 <script src="waveformPlayer.js"></script>
 <link rel="stylesheet" href="styles.css">
