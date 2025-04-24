@@ -1,3 +1,6 @@
+import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js'
+
+
 // Get the canvases and their contexts
 const waveformCanvas = document.getElementById("waveformCanvas");
 const waveformCtx = waveformCanvas.getContext("2d");
@@ -290,3 +293,14 @@ function sendValues() {
 }
 
 setInterval(sendValues, 1000);
+
+const wavesurfer = WaveSurfer.create({
+    container: '#waveform',
+    waveColor: '#4F4A85',
+    progressColor: '#383351',
+    url: '/audio-file',
+})
+
+wavesurfer.on('interaction', () => {
+    wavesurfer.play()
+})
