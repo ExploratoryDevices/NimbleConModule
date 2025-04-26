@@ -1,5 +1,6 @@
 import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js'
 import TimelinePlugin from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/plugins/timeline.esm.js'
+import {saveStateToLocalStorage} from "./save-load.js";
 
 const waveformCanvas = document.getElementById("waveformCanvas");
 const waveformWrapper = document.getElementById('waveformWrapper');
@@ -18,7 +19,7 @@ const COLORS = {
     "green": ["green", "rgba(0, 255, 0, 0.3)"]
 };
 
-let stateData = {
+export let stateData = {
     "red": [],
     "green": [],
 };
@@ -99,7 +100,7 @@ function timeToX(time) {
     return (time - visibleStartTime) * currentPxPerSec;
 }
 
-function drawInteraction() {
+export function drawInteraction() {
     const width = interactionCanvas.width;
     const height = interactionCanvas.height;
     interactionCtx.clearRect(0, 0, width, height);
@@ -339,6 +340,7 @@ interactionCanvas.addEventListener("mouseup", (event) => {
         previewPoint = null;
         drawInteraction();
     }
+    saveStateToLocalStorage();
 });
 
 // Helper to find closest point

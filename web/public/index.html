@@ -10,6 +10,9 @@
 
 <!-- Add inside your body somewhere -->
 <input type="file" id="fileUpload" accept="audio/*" />
+<button id="saveButton">Save State</button>
+<input type="file" id="loadInput" style="display:none;" />
+<button id="loadButton">Load State</button>
 
 
 <div id="redValueDisplay">Red value: 0</div>
@@ -39,8 +42,7 @@
     </div>
 </div>
 
-
-<script type="module" src="waveformPlayer.js"></script>
+<script type="module" src="main.js"></script>
 <link rel="stylesheet" href="styles.css">
 </body>
 </html>
