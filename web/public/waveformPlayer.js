@@ -3,15 +3,14 @@ import TimelinePlugin from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/pl
 
 const waveformCanvas = document.getElementById("waveformCanvas");
 const waveformWrapper = document.getElementById('waveformWrapper');
-const waveformContainer = document.getElementById("waveform");
 const interactionCanvas = document.getElementById("interactionCanvas");
 const interactionCtx = interactionCanvas.getContext("2d");
 const playbackCanvas = document.getElementById("playbackCanvas");
-const playbackCtx = playbackCanvas.getContext("2d");
 const modeToggleButton = document.getElementById("modeToggleButton");
 const actionToggleButton = document.getElementById("actionToggleButton");
 const colorRedButton = document.getElementById("colorRedButton");
 const colorGreenButton = document.getElementById("colorGreenButton");
+const fileInput = document.getElementById("fileUpload");
 const PAYLOAD_ADDR = "http://0.0.0.0:7070";
 
 const COLORS = {
@@ -45,6 +44,14 @@ const wavesurfer = WaveSurfer.create({
 
 wavesurfer.on('scroll', (e) => {
     visibleStartTime = e;
+});
+
+fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const objectUrl = URL.createObjectURL(file);
+        wavesurfer.load(objectUrl);
+    }
 });
 
 function resizeCanvases() {
