@@ -19,7 +19,6 @@ const COLORS = {
     "green": ["green", "rgba(0, 255, 0, 0.3)"]
 };
 
-let audioBuffer = null;
 let stateData = {
     "red": [],
     "green": [],
@@ -31,6 +30,7 @@ let currentPxPerSec = 100;
 let isDragging = false;
 let draggedPoint = null;
 let previewPoint = null;
+let visibleStartTime = 0;
 
 const wavesurfer = WaveSurfer.create({
     container: '#waveform',
@@ -41,6 +41,10 @@ const wavesurfer = WaveSurfer.create({
     plugins: [TimelinePlugin.create()],
     height: 500,
     mediaControls: true,
+});
+
+wavesurfer.on('scroll', (e) => {
+    visibleStartTime = e;
 });
 
 function resizeCanvases() {
@@ -70,18 +74,22 @@ window.addEventListener("keydown", (event) => {
     }
 });
 
-waveformContainer.addEventListener('scroll', () => {
+wavesurfer.getWrapper().addEventListener('scroll', () => {
+    const newScrollLeft = waveformWrapper.scrollLeft;
+    const scrollableWidth = waveformCanvas.width;
+    const duration = wavesurfer.getDuration();
+    visibleStartTime = (newScrollLeft / scrollableWidth) * duration;
+
     drawInteraction();
 });
 
+
 function xToTime(x) {
-    const scrollLeft = wavesurfer.getWrapper().scrollLeft;
-    return (x + scrollLeft) / currentPxPerSec;
+    return visibleStartTime + (x / currentPxPerSec);
 }
 
 function timeToX(time) {
-    const scrollLeft = wavesurfer.getWrapper().scrollLeft;
-    return (time * currentPxPerSec) - scrollLeft;
+    return (time - visibleStartTime) * currentPxPerSec;
 }
 
 function drawInteraction() {
@@ -147,7 +155,6 @@ function drawInteraction() {
     });
 }
 
-
 function getCurrentValue(time, color) {
     if (stateData[color].length === 0) return 0;
     const impliedStart = { x: 0, y: stateData[color][0].y };
@@ -163,24 +170,6 @@ function getCurrentValue(time, color) {
         }
     }
     return 0;
-}
-
-function drawPlaybackLine(currentTime) {
-    const x = timeToX(currentTime);
-    const height = playbackCanvas.height;
-    playbackCtx.clearRect(0, 0, playbackCanvas.width, playbackCanvas.height);
-    playbackCtx.beginPath();
-    playbackCtx.moveTo(x, 0);
-    playbackCtx.lineTo(x, height);
-    playbackCtx.strokeStyle = "black";
-    playbackCtx.lineWidth = 2;
-    playbackCtx.stroke();
-}
-
-function addPoint(x, y) {
-    stateData[currentColor].push({ x, y });
-    stateData[currentColor].sort((a, b) => a.x - b.x);
-    drawInteraction();
 }
 
 function removePoint(clickX, clickY) {
@@ -251,7 +240,6 @@ wavesurfer.on('interaction', () => wavesurfer.play());
 wavesurfer.on("timeupdate", (currentTime) => {
     document.getElementById("redValueDisplay").innerText = `Red value: ${getCurrentValue(currentTime, 'red')}`;
     document.getElementById("greenValueDisplay").innerText = `Green value: ${getCurrentValue(currentTime, 'green')}`;
-    drawPlaybackLine(currentTime);
     drawInteraction();
 });
 
@@ -339,6 +327,8 @@ interactionCanvas.addEventListener("mouseup", (event) => {
         // Add the new point for real
         stateData[currentColor].push(previewPoint);
         stateData[currentColor].sort((a, b) => a.x - b.x);
+        console.log(previewPoint)
+        console.log(visibleStartTime)
         previewPoint = null;
         drawInteraction();
     }
