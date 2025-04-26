@@ -4,70 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waveform Player</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        #canvasContainer {
-            position: relative;
-            width: 100%; /* Full width */
-            height: 100vh; /* Full height */
-            overflow: hidden;
-        }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1; /* Default z-index */
-        }
-        audio {
-            display: block;
-            margin: 20px auto;
-        }
-        .controls {
-            margin: 20px;
-        }
-        .controls button {
-            margin: 10px;
-            padding: 10px;
-        }
-        #redValueDisplay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: red;
-            background-color: white;
-            padding: 5px;
-            border: 1px solid red;
-            z-index: 10; /* Ensure it appears above the canvases */
-        }
-        #greenValueDisplay {
-            position: absolute;
-            top: 10px;
-            left: 140px;
-            color: green;
-            background-color: white;
-            padding: 5px;
-            border: 1px solid green;
-            z-index: 10; /* Ensure it appears above the canvases */
-        }
-    </style>
 </head>
 <body>
 <h1>Waveform Player</h1>
-<div id="canvasContainer">
-    <canvas id="waveformCanvas"></canvas>
-    <canvas id="interactionCanvas" style="z-index: 2;"></canvas>
-    <canvas id="playbackCanvas" style="z-index: 3;"></canvas>
-</div>
-
-<audio id="audioPlayer" controls>
-    <source src="/audio-file" type="audio/mpeg">
-    Your browser does not support the audio element.
-</audio>
 
 <div id="redValueDisplay">Red value: 0</div>
 <div id="greenValueDisplay">Green value: 0</div>
@@ -80,8 +19,20 @@
     <button id="colorGreenButton" style="background-color: green; color: white;">Select Green</button>
 </div>
 
-<div id="waveform">
-    <!-- the waveform will be rendered here -->
+<label>
+    Zoom: <input type="range" min="10" max="1000" value="100" />
+</label>
+
+<div id="waveformWrapper" style="position: relative;">
+    <div id="waveform" style="position: relative; height: 500px;">
+        <!-- WaveSurfer will inject its elements here -->
+    </div>
+    <!-- Overlay canvases OUTSIDE so they're not affected by WaveSurfer's internals -->
+    <div id="overlayContainer" style="position: absolute; top: 0; left: 0; right: 0; height: 500px;">
+        <canvas id="waveformCanvas" style="position: absolute; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></canvas>
+        <canvas id="interactionCanvas" style="position: absolute; width: 100%; height: 100%; z-index: 3; pointer-events: auto;"></canvas>
+        <canvas id="playbackCanvas" style="position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></canvas>
+    </div>
 </div>
 
 

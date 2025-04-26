@@ -1,14 +1,13 @@
 import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js'
+import TimelinePlugin from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/plugins/timeline.esm.js'
 
-
-// Get the canvases and their contexts
 const waveformCanvas = document.getElementById("waveformCanvas");
-const waveformCtx = waveformCanvas.getContext("2d");
+const waveformWrapper = document.getElementById('waveformWrapper');
+const waveformContainer = document.getElementById("waveform");
 const interactionCanvas = document.getElementById("interactionCanvas");
 const interactionCtx = interactionCanvas.getContext("2d");
 const playbackCanvas = document.getElementById("playbackCanvas");
 const playbackCtx = playbackCanvas.getContext("2d");
-const audioPlayer = document.getElementById("audioPlayer");
 const modeToggleButton = document.getElementById("modeToggleButton");
 const actionToggleButton = document.getElementById("actionToggleButton");
 const colorRedButton = document.getElementById("colorRedButton");
@@ -20,92 +19,99 @@ const COLORS = {
     "green": ["green", "rgba(0, 255, 0, 0.3)"]
 };
 
-
 let audioBuffer = null;
 let stateData = {
     "red": [],
     "green": [],
-}; // Map of arrays to hold external data (dots) as {x, y} objects
-let drawMode = false; // Flag for draw mode vs playback mode
-let addMode = true; // Flag for add mode vs delete mode
+};
+let drawMode = false;
+let addMode = true;
 let currentColor = "red";
+let currentPxPerSec = 100;
+let isDragging = false;
+let draggedPoint = null;
+let previewPoint = null;
 
-// Resize all canvases to full width of the browser
+const wavesurfer = WaveSurfer.create({
+    container: '#waveform',
+    waveColor: '#4F4A85',
+    progressColor: '#383351',
+    url: '/audio-file',
+    minPxPerSec: 100,
+    plugins: [TimelinePlugin.create()],
+    height: 500,
+    mediaControls: true,
+});
+
 function resizeCanvases() {
-    const fixedHeight = 400; // Fixed height for all canvases
-    waveformCanvas.width = window.innerWidth;
-    waveformCanvas.height = fixedHeight;
-    interactionCanvas.width = window.innerWidth;
-    interactionCanvas.height = fixedHeight;
-    playbackCanvas.width = window.innerWidth;
-    playbackCanvas.height = fixedHeight;
+    const container = document.getElementById("waveform");
+    const width = container.scrollWidth;
+    const height = container.clientHeight;
 
-    if (audioBuffer) {
-        drawWaveformOnce(audioBuffer);
-    }
+    [waveformCanvas, interactionCanvas, playbackCanvas].forEach(canvas => {
+        canvas.width = width;
+        canvas.height = height;
+    });
+
     drawInteraction();
-    drawPlaybackLine();
 }
-
 
 window.addEventListener("resize", resizeCanvases);
 resizeCanvases();
 
-// Fetch and decode the MP3 file
-fetch("/audio-file")
-    .then(response => response.arrayBuffer())
-    .then(arrayBuffer => {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        return audioContext.decodeAudioData(arrayBuffer);
-    })
-    .then(buffer => {
-        audioBuffer = buffer;
-        drawWaveformOnce(audioBuffer); // Draw the waveform once
-    })
-    .catch(error => {
-        console.error("An error occurred:", error);
-    });
-
-// Draw the waveform (static layer)
-function drawWaveformOnce(buffer) {
-    const channelData = buffer.getChannelData(0);
-    const width = waveformCanvas.width;
-    const height = waveformCanvas.height;
-    const step = Math.ceil(channelData.length / width);
-    const amp = height / 2;
-
-    waveformCtx.clearRect(0, 0, width, height);
-
-    waveformCtx.beginPath();
-    for (let i = 0; i < width; i++) {
-        const min = Math.min(...channelData.slice(i * step, (i + 1) * step));
-        const max = Math.max(...channelData.slice(i * step, (i + 1) * step));
-        waveformCtx.moveTo(i, (1 + min) * amp);
-        waveformCtx.lineTo(i, (1 + max) * amp);
+window.addEventListener("keydown", (event) => {
+    if (event.code === "Space") {
+        event.preventDefault(); // prevent page scrolling
+        if (wavesurfer.isPlaying()) {
+            wavesurfer.pause();
+        } else {
+            wavesurfer.play();
+        }
     }
-    waveformCtx.strokeStyle = "blue";
-    waveformCtx.stroke();
+});
+
+waveformContainer.addEventListener('scroll', () => {
+    drawInteraction();
+});
+
+function xToTime(x) {
+    const scrollLeft = wavesurfer.getWrapper().scrollLeft;
+    return (x + scrollLeft) / currentPxPerSec;
 }
 
-// Draw interaction elements (dots, lines, and shading)
+function timeToX(time) {
+    const scrollLeft = wavesurfer.getWrapper().scrollLeft;
+    return (time * currentPxPerSec) - scrollLeft;
+}
+
 function drawInteraction() {
     const width = interactionCanvas.width;
     const height = interactionCanvas.height;
-
     interactionCtx.clearRect(0, 0, width, height);
 
     Object.keys(stateData).forEach(color => {
-        if (stateData[color].length === 0) return;
+        if (stateData[color].length === 0 && !previewPoint) return;
 
-        const impliedStart = { x: 0, y: stateData[color][0].y };
-        const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
-        const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
+        // Copy the points
+        let points = [...stateData[color]];
 
-        // Draw translucent shading
+        // If previewing and matching the current color, temporarily add the preview point
+        if (previewPoint && color === currentColor) {
+            points.push(previewPoint);
+            points.sort((a, b) => a.x - b.x);
+        }
+
+        if (points.length === 0) return;
+
+        const impliedStart = { x: 0, y: points[0].y };
+        const impliedEnd = { x: wavesurfer.getDuration(), y: points[points.length - 1].y };
+        const allPoints = [impliedStart, ...points, impliedEnd];
+
+        // Draw the shaded fill
         interactionCtx.beginPath();
         interactionCtx.moveTo(0, height - (impliedStart.y / 1023) * height);
         allPoints.forEach(point => {
-            const x = (point.x / audioPlayer.duration) * width;
+            const x = timeToX(point.x);
             const y = height - (point.y / 1023) * height;
             interactionCtx.lineTo(x, y);
         });
@@ -115,9 +121,9 @@ function drawInteraction() {
         interactionCtx.fillStyle = COLORS[color][1];
         interactionCtx.fill();
 
-        // Draw dots and lines
+        // Draw the lines and points
         allPoints.forEach((point, index) => {
-            const x = (point.x / audioPlayer.duration) * width;
+            const x = timeToX(point.x);
             const y = height - (point.y / 1023) * height;
 
             // Draw dot
@@ -126,10 +132,10 @@ function drawInteraction() {
             interactionCtx.fillStyle = COLORS[color][0];
             interactionCtx.fill();
 
-            // Draw line
+            // Draw line to next
             if (index < allPoints.length - 1) {
                 const nextPoint = allPoints[index + 1];
-                const nextX = (nextPoint.x / audioPlayer.duration) * width;
+                const nextX = timeToX(nextPoint.x);
                 const nextY = height - (nextPoint.y / 1023) * height;
                 interactionCtx.beginPath();
                 interactionCtx.moveTo(x, y);
@@ -142,31 +148,10 @@ function drawInteraction() {
 }
 
 
-// Draw playback line (dynamic layer)
-function drawPlaybackLine() {
-    const width = playbackCanvas.width;
-    const height = playbackCanvas.height;
-
-    playbackCtx.clearRect(0, 0, width, height);
-
-    const playbackX = (audioPlayer.currentTime / audioPlayer.duration) * width;
-
-    playbackCtx.beginPath();
-    playbackCtx.moveTo(playbackX, 0);
-    playbackCtx.lineTo(playbackX, height);
-    playbackCtx.strokeStyle = "black";
-    playbackCtx.lineWidth = 2;
-    playbackCtx.stroke();
-}
-
-// Calculate the current red Y value
 function getCurrentValue(time, color) {
-    if (stateData[color].length === 0) {
-        return 0; // No dots, return 0
-    }
-
+    if (stateData[color].length === 0) return 0;
     const impliedStart = { x: 0, y: stateData[color][0].y };
-    const impliedEnd = { x: audioPlayer.duration, y: stateData[color][stateData[color].length - 1].y };
+    const impliedEnd = { x: xToTime(interactionCanvas.width), y: stateData[color][stateData[color].length - 1].y };
     const allPoints = [impliedStart, ...stateData[color], impliedEnd].sort((a, b) => a.x - b.x);
 
     for (let i = 0; i < allPoints.length - 1; i++) {
@@ -177,130 +162,200 @@ function getCurrentValue(time, color) {
             return Math.round(point1.y + t * (point2.y - point1.y));
         }
     }
-
     return 0;
 }
 
-// Update the "Red value" display
-audioPlayer.addEventListener("timeupdate", () => {
-    const currentTime = audioPlayer.currentTime;
-    const currentRedValue = getCurrentValue(currentTime, 'red');
-    const currentGreenValue = getCurrentValue(currentTime, 'green');
+function drawPlaybackLine(currentTime) {
+    const x = timeToX(currentTime);
+    const height = playbackCanvas.height;
+    playbackCtx.clearRect(0, 0, playbackCanvas.width, playbackCanvas.height);
+    playbackCtx.beginPath();
+    playbackCtx.moveTo(x, 0);
+    playbackCtx.lineTo(x, height);
+    playbackCtx.strokeStyle = "black";
+    playbackCtx.lineWidth = 2;
+    playbackCtx.stroke();
+}
 
-    // Update the text boxes
-    const redValueDisplay = document.getElementById("redValueDisplay");
-    const greenValueDisplay = document.getElementById("greenValueDisplay");
-    redValueDisplay.innerText = `Red value: ${currentRedValue}`;
-    greenValueDisplay.innerText = `Green value: ${currentGreenValue}`;
-
-    // Update the playback line
-    drawPlaybackLine();
-});
-
-// Add a new point to stateData
 function addPoint(x, y) {
     stateData[currentColor].push({ x, y });
     stateData[currentColor].sort((a, b) => a.x - b.x);
     drawInteraction();
 }
 
-// Remove a point closest to the clicked coordinates
 function removePoint(clickX, clickY) {
-    const width = interactionCanvas.width;
     const height = interactionCanvas.height;
-
     const closestIndex = stateData[currentColor].findIndex(point => {
-        const x = (point.x / audioPlayer.duration) * width;
+        const x = timeToX(point.x);
         const y = height - (point.y / 1023) * height;
         const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
         return distance < 10;
     });
-
     if (closestIndex !== -1) {
         stateData[currentColor].splice(closestIndex, 1);
         drawInteraction();
     }
 }
 
-// Toggle between playback and draw mode
+waveformWrapper.addEventListener("wheel", (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault(); // Stop page from scrolling horizontally
+
+        const currentScroll = wavesurfer.getWrapper().scrollLeft;
+        wavesurfer.getWrapper().scrollLeft = currentScroll + e.deltaX * 1.5;
+    }
+}, { passive: false });
+
+
 modeToggleButton.addEventListener("click", () => {
     drawMode = !drawMode;
     modeToggleButton.innerText = drawMode ? "Switch to Playback Mode" : "Switch to Draw Mode";
+    if (drawMode) {
+        interactionCanvas.style.zIndex = 3;
+        playbackCanvas.style.zIndex = 2;
+        interactionCanvas.style.pointerEvents = 'auto'; // Allow clicking for drawing
+    } else {
+        interactionCanvas.style.zIndex = 2;
+        playbackCanvas.style.zIndex = 3;
+        interactionCanvas.style.pointerEvents = 'none'; // Disable blocking clicks when playing
+    }
 });
 
-// Toggle between add and delete mode
+
 actionToggleButton.addEventListener("click", () => {
     addMode = !addMode;
     actionToggleButton.innerText = addMode ? "Switch to Delete Points" : "Switch to Add Points";
 });
 
-// Canvas click handler
-interactionCanvas.addEventListener("click", (event) => {
+colorRedButton.addEventListener("click", () => currentColor = "red");
+colorGreenButton.addEventListener("click", () => currentColor = "green");
+
+function sendValues() {
+    const currentTime = wavesurfer.getCurrentTime();
+    const payload = {
+        redValue: getCurrentValue(currentTime, 'red'),
+        greenValue: getCurrentValue(currentTime, 'green'),
+        timestamp: currentTime
+    };
+    fetch(PAYLOAD_ADDR, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    }).catch(console.error);
+}
+
+// setInterval(sendValues, 1000);
+
+wavesurfer.on('interaction', () => wavesurfer.play());
+
+wavesurfer.on("timeupdate", (currentTime) => {
+    document.getElementById("redValueDisplay").innerText = `Red value: ${getCurrentValue(currentTime, 'red')}`;
+    document.getElementById("greenValueDisplay").innerText = `Green value: ${getCurrentValue(currentTime, 'green')}`;
+    drawPlaybackLine(currentTime);
+    drawInteraction();
+});
+
+wavesurfer.once('decode', () => {
+    const slider = document.querySelector('input[type="range"]');
+    slider.addEventListener('input', (e) => {
+        const sliderValue = e.target.valueAsNumber;
+        const normalized = sliderValue / 1000;
+        const logZoom = 1 * Math.pow(100, normalized);
+
+        const container = document.getElementById('waveform');
+        const duration = wavesurfer.getDuration();
+
+        // Calculate minimum zoom to fit full song
+        const minPxPerSec = container.clientWidth / duration;
+
+        // Clamp zoom level: don't allow zooming out past full song view
+        currentPxPerSec = Math.max(logZoom, minPxPerSec);
+
+        wavesurfer.zoom(currentPxPerSec);
+        resizeCanvases();  // Important to resize canvases after zoom
+        drawInteraction();
+    });
+});
+
+// When you press mouse down
+interactionCanvas.addEventListener("mousedown", (event) => {
+    if (!drawMode) return;
+
     const rect = interactionCanvas.getBoundingClientRect();
-    const clickX = event.clientX - rect.left; // Map click position X
-    const clickY = event.clientY - rect.top; // Map click position Y
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
 
-    // Debugging log
-    console.log(`Click coordinates relative to canvas: (${clickX}, ${clickY})`);
+    const timestamp = xToTime(clickX);
+    const value = 1023 - (clickY / interactionCanvas.height) * 1023;
 
-    if (drawMode) {
-        const timestamp = (clickX / interactionCanvas.width) * audioPlayer.duration;
-        const value = 1023 - (clickY / interactionCanvas.height) * 1023;
-
-        if (addMode) {
-            addPoint(timestamp, value);
+    if (addMode) {
+        // Check if clicking near existing point to drag
+        draggedPoint = findClosestPoint(clickX, clickY, currentColor);
+        if (draggedPoint) {
+            isDragging = true;
         } else {
-            removePoint(clickX, clickY);
+            // Otherwise, start previewing a new point
+            previewPoint = { x: timestamp, y: value };
         }
     } else {
-        const clickPosition = (clickX / interactionCanvas.width) * audioPlayer.duration;
-        audioPlayer.currentTime = clickPosition; // Seek audio playback
+        removePoint(clickX, clickY);
     }
 });
 
+// While mouse moves
+interactionCanvas.addEventListener("mousemove", (event) => {
+    if (!drawMode) return;
 
-colorRedButton.addEventListener("click", () => {
-    currentColor = "red";
+    const rect = interactionCanvas.getBoundingClientRect();
+    const moveX = event.clientX - rect.left;
+    const moveY = event.clientY - rect.top;
+
+    const timestamp = xToTime(moveX);
+    const value = 1023 - (moveY / interactionCanvas.height) * 1023;
+
+    if (isDragging && draggedPoint) {
+        // Update dragged point
+        draggedPoint.x = timestamp;
+        draggedPoint.y = value;
+        drawInteraction();
+    } else if (previewPoint) {
+        // Update preview point
+        previewPoint.x = timestamp;
+        previewPoint.y = value;
+        drawInteraction();
+    }
 });
 
-colorGreenButton.addEventListener("click", () => {
-    currentColor = "green";
+// When mouse button is released
+interactionCanvas.addEventListener("mouseup", (event) => {
+    if (!drawMode) return;
+
+    if (isDragging) {
+        // Done dragging
+        isDragging = false;
+        draggedPoint = null;
+        drawInteraction();
+    } else if (previewPoint) {
+        // Add the new point for real
+        stateData[currentColor].push(previewPoint);
+        stateData[currentColor].sort((a, b) => a.x - b.x);
+        previewPoint = null;
+        drawInteraction();
+    }
 });
 
-function sendValues() {
-    const currentTime = audioPlayer.currentTime; // Current playback time
-    const currentRedValue = getCurrentValue(currentTime, 'red');
-    const currentGreenValue = getCurrentValue(currentTime, 'green');
-
-    // Prepare the payload
-    const payload = {
-        redValue: currentRedValue,
-        greenValue: currentGreenValue,
-        timestamp: currentTime
-    };
-
-    // Send the POST request to the external service
-    fetch(PAYLOAD_ADDR, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-    })
-        .catch(error => {
-            console.error("Error during POST request:", error);
-        });
+// Helper to find closest point
+function findClosestPoint(clickX, clickY, color) {
+    const height = interactionCanvas.height;
+    const threshold = 10; // pixels
+    for (const point of stateData[color]) {
+        const px = timeToX(point.x);
+        const py = height - (point.y / 1023) * height;
+        const distance = Math.sqrt((clickX - px) ** 2 + (clickY - py) ** 2);
+        if (distance < threshold) {
+            return point;
+        }
+    }
+    return null;
 }
 
-setInterval(sendValues, 1000);
-
-const wavesurfer = WaveSurfer.create({
-    container: '#waveform',
-    waveColor: '#4F4A85',
-    progressColor: '#383351',
-    url: '/audio-file',
-})
-
-wavesurfer.on('interaction', () => {
-    wavesurfer.play()
-})
