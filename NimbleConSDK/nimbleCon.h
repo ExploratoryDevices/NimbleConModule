@@ -124,7 +124,7 @@ void initNimbleSDK()
   pinMode(ENC_A, INPUT_PULLUP);
   pinMode(ENC_B, INPUT_PULLUP);
 
-  ESP32Encoder::useInternalWeakPullResistors=UP;
+  ESP32Encoder::useInternalWeakPullResistors = puType::up;
   encoder.attachHalfQuad(ENC_A, ENC_B);
   encoder.setCount(37);
 
@@ -136,12 +136,18 @@ void initNimbleSDK()
   // Set up timer interrupt.
   timer = timerBegin(0, 80, true);  // Set timer parameters
   timerAttachInterrupt(timer, &onTimer, true);  // Attach interrupt to ISR
+
+  // Zap: below lines are obsolete
   timerAlarmWrite(timer, SEND_INTERVAL, true);  // Configure timer threshold
   timerAlarmEnable(timer); // Enable timer
+
+  // Zap: new Timer API as of Arduino ESP32 Core v3.0
+  // timerAlarm(timer, SEND_INTERVAL, true, 0);
 
   digitalWrite(ENC_LED_1, LOW);
 
   // Attach PWM to LED pins (pin, PWM channel)
+  // Zap: obsolete
   ledcAttachPin(4, ENC_LED_1);
   ledcAttachPin(5, ENC_LED_2);
   ledcAttachPin(12, ENC_LED_3);
@@ -156,6 +162,7 @@ void initNimbleSDK()
   ledcAttachPin(27, WIFI_LED);
 
   // Configure PWM channels (PWM channel, PWM frequency, PWM counter bits)
+  // Zap: obsolete
   ledcSetup(ENC_LED_1,  1000, 8);
   ledcSetup(ENC_LED_2,  1000, 8);
   ledcSetup(ENC_LED_3,  1000, 8);
@@ -168,6 +175,20 @@ void initNimbleSDK()
   ledcSetup(PEND_LED,  1000, 8);
   ledcSetup(BT_LED,  1000, 8);
   ledcSetup(WIFI_LED,  1000, 8);
+
+  // Zap: new ledc API as of Arduino ESP32 Core v3.0
+  // ledcAttachChannel(4, 1000, 8, ENC_LED_1);
+  // ledcAttachChannel(5, 1000, 8, ENC_LED_2);
+  // ledcAttachChannel(12, 1000, 8, ENC_LED_3);
+  // ledcAttachChannel(13, 1000, 8, ENC_LED_4);
+  // ledcAttachChannel(21, 1000, 8, ENC_LED_5);
+  // ledcAttachChannel(22, 1000, 8, ENC_LED_6);
+  // ledcAttachChannel(23, 1000, 8, ENC_LED_7);
+  // ledcAttachChannel(25, 1000, 8, ENC_LED_8);
+  // ledcAttachChannel(18, 1000, 8, ACT_LED);
+  // ledcAttachChannel(19, 1000, 8, PEND_LED);
+  // ledcAttachChannel(26, 1000, 8, BT_LED);
+  // ledcAttachChannel(27, 1000, 8, WIFI_LED);
 }
 
 void driveLEDs(byte LEDScale)
