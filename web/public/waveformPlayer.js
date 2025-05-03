@@ -1,6 +1,7 @@
 import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js'
 import TimelinePlugin from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/plugins/timeline.esm.js'
 import {saveStateToLocalStorage} from "./save-load.js";
+import {sendPositionUpdate} from "./outputs";
 
 const waveformCanvas = document.getElementById("waveformCanvas");
 const waveformWrapper = document.getElementById('waveformWrapper');
@@ -12,7 +13,6 @@ const actionToggleButton = document.getElementById("actionToggleButton");
 const colorRedButton = document.getElementById("colorRedButton");
 const colorGreenButton = document.getElementById("colorGreenButton");
 const fileInput = document.getElementById("fileUpload");
-const PAYLOAD_ADDR = "http://0.0.0.0:7070";
 
 const COLORS = {
     "red": ["red", "rgba(255, 0, 0, 0.3)"],
@@ -234,14 +234,10 @@ function sendValues() {
         greenValue: getCurrentValue(currentTime, 'green'),
         timestamp: currentTime
     };
-    fetch(PAYLOAD_ADDR, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    }).catch(console.error);
+    sendPositionUpdate(getCurrentValue(currentTime, 'red'), getCurrentValue(currentTime, 'green'), 0,0);
 }
 
-// setInterval(sendValues, 1000);
+setInterval(sendValues, 1000);
 
 wavesurfer.on('interaction', () => wavesurfer.play());
 
