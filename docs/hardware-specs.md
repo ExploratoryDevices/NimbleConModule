@@ -12,7 +12,7 @@
 - 1x Actuator communications port (Label "A")
     - [6P2C RJ11](https://en.wikipedia.org/wiki/Registered_jack#RJ11,_RJ14,_RJ25_wiring) female plug (telephone line connection to actuator)
     - Pin 1: Unused
-    - Pin 2: +12v
+    - Pin 2: +12v (or +8v, depending on manufacture date)
     - Pin 3: TX (at 5v)
     - Pin 4: RX (at 5v)
     - Pin 5: GND
